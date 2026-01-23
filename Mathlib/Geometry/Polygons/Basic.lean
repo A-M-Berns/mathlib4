@@ -22,21 +22,21 @@ This file defines polygons in a module over ℝ.
 
 ## Main theorems
 
-* `Polygon.edgeSet_eq_image`: The edge set equals the image of the edge path on `[0, 1]`.
+* `Polygon.edgeSet_eq_image_edgePath`: The edge set equals the image of the edge path on `[0, 1]`.
 
 -/
 
 open Set Topology
 
 /-- A polygon with `n` vertices in a module `P` over `ℝ`. -/
-structure Polygon (P : Type*) (n : ℕ) [NeZero n] [AddCommGroup P] [Module ℝ P] where
+structure Polygon (P : Type*) (n : ℕ) [NeZero n] where
   /-- The vertices of the polygon, indexed by `Fin n`. -/
   vertices : Fin n → P
 
 
 /-- A polygon in 2-dimensional Euclidean space. -/
-structure EuclideanPolygon (n : ℕ) [NeZero n] : Type where
-  toPolygon : Polygon (EuclideanSpace ℝ (Fin 2)) n
+structure EuclideanPolygon (n : ℕ) [NeZero n] : Type
+    extends Polygon (EuclideanSpace ℝ (Fin 2)) n where
   /-- In Euclidean space, polygons must have at least 3 vertices. -/
   n_ge_3 : 3 ≤ n
 
@@ -57,7 +57,7 @@ def edgePath (poly : Polygon P n) (i : Fin n) : ℝ → P :=
 def boundary (poly : Polygon P n) : Set P := ⋃ i, poly.edgeSet i
 
 /-- The edge set equals the image of the edge path on the unit interval. -/
-theorem edgeSet_eq_image (poly : Polygon P n) (i : Fin n) :
+theorem edgeSet_eq_image_edgePath (poly : Polygon P n) (i : Fin n) :
     poly.edgeSet i = poly.edgePath i '' Icc (0 : ℝ) 1 := by
   simp only [edgeSet, edgePath, segment_eq_image_lineMap]
 

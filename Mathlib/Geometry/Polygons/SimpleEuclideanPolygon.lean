@@ -85,7 +85,7 @@ exactly two connected components, a bounded interior and an unbounded exterior. 
 noncomputable axiom jordan_curve_theorem {γ : Set (EuclideanSpace ℝ (Fin 2))}
     (hγ : IsSimpleClosedCurve γ) : JordanDecomposition γ
 
-/-- A simple Eulicdean polygon is a polygon where non-adjacent vertices are distinct,
+/-- A simple Eulicdean polygon is a Euclidean polygon where non-adjacent vertices are distinct,
 non-adjacent edges are disjoint, and adjacent edges intersect only at their shared vertex. -/
 structure SimpleEuclideanPolygon (n : ℕ) [NeZero n] : Type
     extends EuclideanPolygon n where
@@ -130,184 +130,184 @@ lemma boundaryParam_continuousOn_piece (k : Fin n) :
       intro x xin
       have hn : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
       by_cases h : x = hi
-      right
-      exact h
-      simp only [Icc,lo,hi] at xin
-      simp only [hi] at h
-      push_neg at h
-      have neqkplus1 : x * ↑n ≠ ↑↑k + 1 := by
-        contrapose! h
-        rw [eq_div_iff (ne_of_gt hn)]
+      · right
         exact h
-      have : ↑↑k ≤ x * ↑n ∧ x * ↑n < ↑↑k + 1 := by
-        obtain ⟨hlo, hhi⟩ := xin
-        constructor
-        exact (mul_inv_le_iff₀ hn).mp hlo
-        have : x * ↑n ≤ ↑↑k + 1 := by exact (le_div_iff₀ hn).mp hhi
-        exact Std.lt_of_le_of_ne this neqkplus1
-      left
-      have floorEq : ⌊x * ↑n⌋ = ↑k := by
-        rw [Int.floor_eq_iff]
-        exact_mod_cast this
-      simp only [floorEq, Int.toNat_natCast, Nat.mod_eq_of_lt k.isLt]
+      · simp only [Icc,lo,hi] at xin
+        simp only [hi] at h
+        push_neg at h
+        have neqkplus1 : x * ↑n ≠ ↑↑k + 1 := by
+          contrapose! h
+          rw [eq_div_iff (ne_of_gt hn)]
+          exact h
+        have : ↑↑k ≤ x * ↑n ∧ x * ↑n < ↑↑k + 1 := by
+          obtain ⟨hlo, hhi⟩ := xin
+          constructor
+          · exact (mul_inv_le_iff₀ hn).mp hlo
+          · have : x * ↑n ≤ ↑↑k + 1 := by exact (le_div_iff₀ hn).mp hhi
+            exact Std.lt_of_le_of_ne this neqkplus1
+        left
+        have floorEq : ⌊x * ↑n⌋ = ↑k := by
+          rw [Int.floor_eq_iff]
+          exact_mod_cast this
+        simp only [floorEq, Int.toNat_natCast, Nat.mod_eq_of_lt k.isLt]
     by_cases last : (k.val + 1 : ℝ) / n = 1
+    · intro x hx
+      have hk_eq : k.val + 1 = n := by
+        have hn : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne n)
+        have h := div_eq_one_iff_eq hn |>.mp last
+        exact_mod_cast h
+      by_cases hx1 : x = 1
+      · subst hx1
+        refine ContinuousWithinAt.congr_of_eventuallyEq
+          (f := fun t => poly.toPolygon.edgePath k (t * ↑n - ↑↑k)) ?_ ?_ ?_
+        · apply Continuous.continuousWithinAt
+          unfold Polygon.edgePath
+          continuity
+        · apply eventually_nhdsWithin_of_forall
+          intro t ht
+          by_cases ht1 : t = 1
+          · subst ht1
+            simp only [↓reduceIte, one_mul, Polygon.edgePath]
+            have hparam : (↑n : ℝ) - ↑↑k = 1 := by
+              have hkval : k.val = n - 1 := by omega
+              have hn_pos : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr (NeZero.ne n)
+              have : (n : ℝ) - (n - 1 : ℕ) = 1 := by
+                rw [Nat.cast_sub hn_pos]
+                ring
+              rw [hkval]
+              exact this
+            rw [hparam, AffineMap.lineMap_apply_one]
+            congr 1
+            apply Fin.ext
+            simp only [Fin.val_add, Fin.val_zero]
+            have h1 : (1 : Fin n).val = 1 % n := rfl
+            simp only [h1, Nat.add_mod_mod, hk_eq, Nat.mod_self]
+          · simp only [ht1, ↓reduceIte]
+            have ht' := onPiece t ht
+            rcases ht' with hfloor | heq
+            · simp only [hfloor]
+            · simp only [hi] at heq
+              rw [last] at heq
+              exact absurd heq ht1
+        · -- eq_at: show they agree at t = 1
+          simp only [↓reduceIte, one_mul, Polygon.edgePath]
+          have hparam : (↑n : ℝ) - ↑↑k = 1 := by
+            have hkval : k.val = n - 1 := by omega
+            have hn_pos : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr (NeZero.ne n)
+            have : (n : ℝ) - (n - 1 : ℕ) = 1 := by
+              rw [Nat.cast_sub hn_pos]
+              ring
+            rw [hkval]
+            exact this
+          rw [hparam, AffineMap.lineMap_apply_one]
+          congr 1
+          apply Fin.ext
+          simp only [Fin.val_add, Fin.val_zero]
+          have h1 : (1 : Fin n).val = 1 % n := rfl
+          simp only [h1, Nat.add_mod_mod, hk_eq, Nat.mod_self]
+      · simp only [lo,hi] at onPiece
+        have hx' := onPiece x hx
+        rcases hx' with onSegment | atEnd
+        · apply ContinuousWithinAt.congr_of_eventuallyEq
+            _ (eventually_nhdsWithin_of_forall (fun t ht => ?_))
+          · simp only [hx1]
+            simp only [↓reduceIte, onSegment]
+            simp only [Fin.eta]
+            rfl
+          · apply Continuous.continuousWithinAt
+            unfold Polygon.edgePath
+            apply Continuous.comp
+            · exact AffineMap.lineMap_continuous
+            continuity
+          · by_cases ht1 : t = 1
+            · simp only [ht1, if_true]
+              have hparam : (1 : ℝ) * ↑n - ↑↑k = 1 := by
+                have h := div_eq_one_iff_eq (Nat.cast_ne_zero.mpr (NeZero.ne n)) |>.mp last
+                field_simp
+                linarith
+              rw [hparam]
+              simp only [Polygon.edgePath]
+              simp only [AffineMap.lineMap_apply_one]
+              congr 1
+              have : (k + 1 : Fin n).val = 0 := by
+                simp only [Fin.val_add, Fin.coe_ofNat_eq_mod, Nat.add_mod_mod]
+                simp only [hk_eq, Nat.mod_self]
+              exact Fin.ext this.symm
+            · simp only [ht1, ite_false]
+              congr 1
+              · ext
+                exact (onPiece t ht).resolve_right (fun h => ht1 (last ▸ h))
+              · congr 1
+                exact_mod_cast (onPiece t ht).resolve_right (fun h => ht1 (last ▸ h))
+        · exact absurd (atEnd.trans last) hx1
     intro x hx
-    have hk_eq : k.val + 1 = n := by
-      have hn : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne n)
-      have h := div_eq_one_iff_eq hn |>.mp last
-      exact_mod_cast h
-    by_cases hx1 : x = 1
-    subst hx1
-    refine ContinuousWithinAt.congr_of_eventuallyEq
-      (f := fun t => poly.toPolygon.edgePath k (t * ↑n - ↑↑k)) ?_ ?_ ?_
-    · apply Continuous.continuousWithinAt
-      unfold Polygon.edgePath
-      continuity
-    · apply eventually_nhdsWithin_of_forall
-      intro t ht
-      by_cases ht1 : t = 1
-      · subst ht1
-        simp only [↓reduceIte, one_mul, Polygon.edgePath]
-        have hparam : (↑n : ℝ) - ↑↑k = 1 := by
-          have hkval : k.val = n - 1 := by omega
-          have hn_pos : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr (NeZero.ne n)
-          have : (n : ℝ) - (n - 1 : ℕ) = 1 := by
-            rw [Nat.cast_sub hn_pos]
-            ring
-          rw [hkval]
-          exact this
-        rw [hparam, AffineMap.lineMap_apply_one]
-        congr 1
-        apply Fin.ext
-        simp only [Fin.val_add, Fin.val_zero]
-        have h1 : (1 : Fin n).val = 1 % n := rfl
-        simp only [h1, Nat.add_mod_mod, hk_eq, Nat.mod_self]
-      · simp only [ht1, ↓reduceIte]
-        have ht' := onPiece t ht
-        rcases ht' with hfloor | heq
-        · simp only [hfloor]
-        · simp only [hi] at heq
-          rw [last] at heq
-          exact absurd heq ht1
-    · -- eq_at: show they agree at t = 1
-      simp only [↓reduceIte, one_mul, Polygon.edgePath]
-      have hparam : (↑n : ℝ) - ↑↑k = 1 := by
-        have hkval : k.val = n - 1 := by omega
-        have hn_pos : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr (NeZero.ne n)
-        have : (n : ℝ) - (n - 1 : ℕ) = 1 := by
-          rw [Nat.cast_sub hn_pos]
-          ring
-        rw [hkval]
-        exact this
-      rw [hparam, AffineMap.lineMap_apply_one]
+    simp only [lo,hi] at onPiece
+    have hx' := onPiece x hx
+    rcases hx' with onSegment | atEnd
+    · have hx1 : x ≠ 1 := by
+        intro heq
+        subst heq
+        have h1 : (1 : ℝ) ≤ hi := hx.2
+        have hk_lt : k.val + 1 < n := by
+          by_contra h; push_neg at h
+          apply last
+          have heq : k.val + 1 = n := le_antisymm (Nat.succ_le_of_lt k.isLt) h
+          have : (↑↑k + 1 : ℝ) = ↑n := by exact_mod_cast heq
+          rw [this, div_self (Nat.cast_ne_zero.mpr (NeZero.ne n))]
+        have h2 : hi < 1 := by
+          simp only [hi]
+          have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
+          rw [div_lt_one hn_pos]
+          norm_cast
+        linarith
+      apply ContinuousWithinAt.congr_of_eventuallyEq
+        _ (eventually_nhdsWithin_of_forall (fun t ht => ?_))
+      · simp only [hx1]
+        simp only [↓reduceIte, onSegment]
+        simp only [Fin.eta]
+        rfl
+      · apply Continuous.continuousWithinAt
+        unfold Polygon.edgePath
+        apply Continuous.comp
+        · exact AffineMap.lineMap_continuous
+        continuity
+      have : k + 1 ≠ n := by
+        intro h
+        apply last
+        rw [div_eq_one_iff_eq (Nat.cast_ne_zero.mpr (NeZero.ne n))]
+        exact_mod_cast h
+      have : (↑k + 1) % n = ↑k + 1 := by
+        refine Nat.mod_eq_of_lt ?_
+        have := k.isLt
+        omega
+      have hk_lt : k.val + 1 < n := by omega
+      have ht1 : t ≠ 1 := by
+        intro heq
+        subst heq
+        have h1 : (1 : ℝ) ≤ hi := ht.2
+        have h2 : hi < 1 := by
+          simp only [hi]
+          have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
+          rw [div_lt_one hn_pos]
+          norm_cast
+        linarith
+      simp only [ht1, ↓reduceIte]
+      specialize onPiece t
+      apply onPiece at ht
+      rcases ht with onSegment' | atEnd'
+      · simp only [onSegment']
+      simp only [atEnd']
+      simp only [div_mul_cancel_of_invertible, Int.floor_add_one, Int.floor_natCast,
+        Int.toNat_natCast_add_one, add_sub_cancel_left]
+      simp only [this]
+      simp only [Nat.cast_add, Nat.cast_one, sub_self]
+      simp only [Polygon.edgePath]
+      simp only [AffineMap.lineMap_apply_zero, AffineMap.lineMap_apply_one]
       congr 1
       apply Fin.ext
-      simp only [Fin.val_add, Fin.val_zero]
-      have h1 : (1 : Fin n).val = 1 % n := rfl
-      simp only [h1, Nat.add_mod_mod, hk_eq, Nat.mod_self]
-    simp only [lo,hi] at onPiece
-    have hx' := onPiece x hx
-    rcases hx' with onSegment | atEnd
-    apply ContinuousWithinAt.congr_of_eventuallyEq
-      _ (eventually_nhdsWithin_of_forall (fun t ht => ?_))
-    simp only [hx1]
-    simp only [↓reduceIte, onSegment]
-    simp only [Fin.eta]
-    rfl
-    apply Continuous.continuousWithinAt
-    unfold Polygon.edgePath
-    apply Continuous.comp
-    exact AffineMap.lineMap_continuous
-    continuity
-    by_cases ht1 : t = 1
-    simp only [ht1, if_true]
-    have hparam : (1 : ℝ) * ↑n - ↑↑k = 1 := by
-      have h := div_eq_one_iff_eq (Nat.cast_ne_zero.mpr (NeZero.ne n)) |>.mp last
-      field_simp
-      linarith
-    rw [hparam]
-    simp only [Polygon.edgePath]
-    simp only [AffineMap.lineMap_apply_one]
-    congr 1
-    have : (k + 1 : Fin n).val = 0 := by
-      simp only [Fin.val_add, Fin.coe_ofNat_eq_mod, Nat.add_mod_mod]
-      simp only [hk_eq, Nat.mod_self]
-    exact Fin.ext this.symm
-    simp only [ht1, ite_false]
-    congr 1
-    ext
-    exact (onPiece t ht).resolve_right (fun h => ht1 (last ▸ h))
-    congr 1
-    exact_mod_cast (onPiece t ht).resolve_right (fun h => ht1 (last ▸ h))
-    exact absurd (atEnd.trans last) hx1
-    intro x hx
-    simp only [lo,hi] at onPiece
-    have hx' := onPiece x hx
-    rcases hx' with onSegment | atEnd
-    have hx1 : x ≠ 1 := by
-      intro heq
-      subst heq
-      have h1 : (1 : ℝ) ≤ hi := hx.2
-      have hk_lt : k.val + 1 < n := by
-        by_contra h; push_neg at h
-        apply last
-        have heq : k.val + 1 = n := le_antisymm (Nat.succ_le_of_lt k.isLt) h
-        have : (↑↑k + 1 : ℝ) = ↑n := by exact_mod_cast heq
-        rw [this, div_self (Nat.cast_ne_zero.mpr (NeZero.ne n))]
-      have h2 : hi < 1 := by
-        simp only [hi]
-        have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
-        rw [div_lt_one hn_pos]
-        norm_cast
-      linarith
-    apply ContinuousWithinAt.congr_of_eventuallyEq
-      _ (eventually_nhdsWithin_of_forall (fun t ht => ?_))
-    simp only [hx1]
-    simp only [↓reduceIte, onSegment]
-    simp only [Fin.eta]
-    rfl
-    apply Continuous.continuousWithinAt
-    unfold Polygon.edgePath
-    apply Continuous.comp
-    exact AffineMap.lineMap_continuous
-    continuity
-    have : k + 1 ≠ n := by
-      intro h
-      apply last
-      rw [div_eq_one_iff_eq (Nat.cast_ne_zero.mpr (NeZero.ne n))]
-      exact_mod_cast h
-    have : (↑k + 1) % n = ↑k + 1 := by
-      refine Nat.mod_eq_of_lt ?_
-      have := k.isLt
-      omega
-    have hk_lt : k.val + 1 < n := by omega
-    have ht1 : t ≠ 1 := by
-      intro heq
-      subst heq
-      have h1 : (1 : ℝ) ≤ hi := ht.2
-      have h2 : hi < 1 := by
-        simp only [hi]
-        have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
-        rw [div_lt_one hn_pos]
-        norm_cast
-      linarith
-    simp only [ht1, ↓reduceIte]
-    specialize onPiece t
-    apply onPiece at ht
-    rcases ht with onSegment' | atEnd'
-    simp only [onSegment']
-    simp only [atEnd']
-    simp only [div_mul_cancel_of_invertible, Int.floor_add_one, Int.floor_natCast,
-      Int.toNat_natCast_add_one, add_sub_cancel_left]
-    simp only [this]
-    simp only [Nat.cast_add, Nat.cast_one, sub_self]
-    simp only [Polygon.edgePath]
-    simp only [AffineMap.lineMap_apply_zero, AffineMap.lineMap_apply_one]
-    congr 1
-    apply Fin.ext
-    simp only [Fin.val_add]
-    rw[← this]
-    norm_num
+      simp only [Fin.val_add]
+      rw[← this]
+      norm_num
     have hx1 : x ≠ 1 := by
       intro heq
       subst heq
@@ -327,65 +327,65 @@ lemma boundaryParam_continuousOn_piece (k : Fin n) :
     subst atEnd
     refine ContinuousWithinAt.congr_of_eventuallyEq (f := fun t =>
       poly.toPolygon.edgePath k (t * ↑n - ↑↑k)) ?cont ?eq_on ?eq_at
-    apply Continuous.continuousWithinAt
-    simp only [Polygon.edgePath]
-    continuity
-    apply eventually_nhdsWithin_of_forall
-    intro x hx'
-    have hx1 : x ≠ 1 := by
-      have hk_le : k.val + 1 ≤ n := by omega
-      have hk_lt : k.val + 1 < n := by
-        refine Nat.lt_of_le_of_ne hk_le ?_
-        intro heq
-        apply last
-        have h : (↑↑k + 1 : ℝ) = ↑n := by
-          exact_mod_cast heq
-        rw [h, div_self (Nat.cast_ne_zero.mpr (NeZero.ne n))]
-      have hx_le : x ≤ (↑↑k + 1)/↑n := by
-        exact (Set.mem_Icc.mp hx').right
-      have h : (↑↑k + 1)/↑n < 1 := by
-        have h1 : (↑↑k + 1 : ℝ) < (n : ℝ) := by
-          norm_cast
-        have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
-        exact Nat.div_lt_one_iff (NeZero.pos n) |>.mpr hk_lt
-      have xle1 : x < 1 := by
-        have h' : (↑↑k + 1 : ℝ) / ↑n < 1 := by
-          have hk_lt : k.val + 1 < n := by omega
+    · apply Continuous.continuousWithinAt
+      simp only [Polygon.edgePath]
+      continuity
+    · apply eventually_nhdsWithin_of_forall
+      intro x hx'
+      have hx1 : x ≠ 1 := by
+        have hk_le : k.val + 1 ≤ n := by omega
+        have hk_lt : k.val + 1 < n := by
+          refine Nat.lt_of_le_of_ne hk_le ?_
+          intro heq
+          apply last
+          have h : (↑↑k + 1 : ℝ) = ↑n := by
+            exact_mod_cast heq
+          rw [h, div_self (Nat.cast_ne_zero.mpr (NeZero.ne n))]
+        have hx_le : x ≤ (↑↑k + 1)/↑n := by
+          exact (Set.mem_Icc.mp hx').right
+        have h : (↑↑k + 1)/↑n < 1 := by
+          have h1 : (↑↑k + 1 : ℝ) < (n : ℝ) := by
+            norm_cast
           have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
-          rw [div_lt_one hn_pos]
-          norm_cast
-        have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
-        linarith
-      exact Ne.symm (ne_of_gt xle1)
-    simp only [hx1, ↓reduceIte]
-    specialize onPiece x
-    apply onPiece at hx'
-    rcases hx' with onSegment | atEnd
-    simp only [onSegment]
-    subst atEnd
-    simp only [div_mul_cancel_of_invertible, Int.floor_add_one, Int.floor_natCast,
-      Int.toNat_natCast_add_one, add_sub_cancel_left]
-    have hk_lt : k.val + 1 < n := by
-      by_contra h
-      push_neg at h
-      have hle : k.val + 1 ≤ n := Nat.succ_le_of_lt k.isLt
-      have heq : k.val + 1 = n := le_antisymm hle h
-      apply last
-      have heq' : (↑↑k + 1 : ℝ) = (n : ℝ) := by exact_mod_cast heq
-      rw [heq']
-      field_simp
-      simp only [div_self_of_invertible]
-    have : (↑k + 1) % n = ↑k + 1 := by
-      exact Nat.mod_eq_of_lt hk_lt
-    simp only [this,Polygon.edgePath]
-    simp only [Nat.cast_add, Nat.cast_one, sub_self, AffineMap.lineMap_apply_zero,
-      AffineMap.lineMap_apply_one]
-    congr 1
-    ext
-    simp only [Fin.val_add]
-    convert (Nat.mod_eq_of_lt hk_lt).symm
-    simp only [Fin.coe_ofNat_eq_mod]
-    exact Nat.mod_eq_of_lt (by omega : 1 < n)
+          exact Nat.div_lt_one_iff (NeZero.pos n) |>.mpr hk_lt
+        have xle1 : x < 1 := by
+          have h' : (↑↑k + 1 : ℝ) / ↑n < 1 := by
+            have hk_lt : k.val + 1 < n := by omega
+            have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
+            rw [div_lt_one hn_pos]
+            norm_cast
+          have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
+          linarith
+        exact Ne.symm (ne_of_gt xle1)
+      simp only [hx1, ↓reduceIte]
+      specialize onPiece x
+      apply onPiece at hx'
+      rcases hx' with onSegment | atEnd
+      · simp only [onSegment]
+      subst atEnd
+      simp only [div_mul_cancel_of_invertible, Int.floor_add_one, Int.floor_natCast,
+        Int.toNat_natCast_add_one, add_sub_cancel_left]
+      have hk_lt : k.val + 1 < n := by
+        by_contra h
+        push_neg at h
+        have hle : k.val + 1 ≤ n := Nat.succ_le_of_lt k.isLt
+        have heq : k.val + 1 = n := le_antisymm hle h
+        apply last
+        have heq' : (↑↑k + 1 : ℝ) = (n : ℝ) := by exact_mod_cast heq
+        rw [heq']
+        field_simp
+        simp only [div_self_of_invertible]
+      have : (↑k + 1) % n = ↑k + 1 := by
+        exact Nat.mod_eq_of_lt hk_lt
+      simp only [this,Polygon.edgePath]
+      simp only [Nat.cast_add, Nat.cast_one, sub_self, AffineMap.lineMap_apply_zero,
+        AffineMap.lineMap_apply_one]
+      congr 1
+      ext
+      simp only [Fin.val_add]
+      convert (Nat.mod_eq_of_lt hk_lt).symm
+      simp only [Fin.coe_ofNat_eq_mod]
+      exact Nat.mod_eq_of_lt (by omega : 1 < n)
     simp only [hx1, ↓reduceIte]
     simp only [div_mul_cancel_of_invertible, Int.floor_add_one, Int.floor_natCast,
       Int.toNat_natCast_add_one, add_sub_cancel_left]
@@ -704,13 +704,17 @@ lemma boundaryParam_injOn_Ico : InjOn poly.boundaryParam (Ico 0 1) := by
     have htxIcc : tx ∈ Icc (0 : ℝ) 1 := ⟨htx.1, le_of_lt htx.2⟩
     have htyIcc : ty ∈ Icc (0 : ℝ) 1 := ⟨hty.1, le_of_lt hty.2⟩
     have xin : poly.toPolygon.edgePath ix tx ∈ poly.toPolygon.edgeSet ix := by
-      simpa [poly.toPolygon.edgeSet_eq_image ix] using mem_image_of_mem (poly.toPolygon.edgePath ix) htxIcc
+      simpa [poly.toPolygon.edgeSet_eq_image_edgePath ix]
+        using mem_image_of_mem (poly.toPolygon.edgePath ix) htxIcc
     have yin0 : poly.toPolygon.edgePath iy ty ∈ poly.toPolygon.edgeSet iy := by
-      simpa [poly.toPolygon.edgeSet_eq_image iy] using mem_image_of_mem (poly.toPolygon.edgePath iy) htyIcc
-    have yin : poly.toPolygon.edgePath ix tx ∈ poly.toPolygon.edgeSet iy := by simpa [hxy] using yin0
+      simpa [poly.toPolygon.edgeSet_eq_image_edgePath iy]
+        using mem_image_of_mem (poly.toPolygon.edgePath iy) htyIcc
+    have yin : poly.toPolygon.edgePath ix tx ∈ poly.toPolygon.edgeSet iy := by
+      simpa [hxy] using yin0
     -- The point is in the intersection
-    have hp : poly.toPolygon.edgePath ix tx ∈ poly.toPolygon.edgeSet iy ∩ poly.toPolygon.edgeSet (iy + 1) := by
-      rw [← adjEdges]; exact ⟨yin, xin⟩
+    have hp : poly.toPolygon.edgePath ix tx ∈
+      poly.toPolygon.edgeSet iy ∩ poly.toPolygon.edgeSet (iy + 1) := by
+        rw [← adjEdges]; exact ⟨yin, xin⟩
     -- By adjacent_edges_inter, this intersection is {vertices (iy + 1)}
     rw [poly.adjacent_edges_inter iy] at hp
     simp only [mem_singleton_iff] at hp
@@ -721,11 +725,14 @@ lemma boundaryParam_injOn_Ico : InjOn poly.boundaryParam (Ico 0 1) := by
     have hedge_at_1 : poly.toPolygon.edgePath iy 1 = poly.toPolygon.vertices (iy + 1) := by
       simp only [Polygon.edgePath, AffineMap.lineMap_apply_one]
     -- lineMap is injective when endpoints are distinct
-    have hne : poly.toPolygon.vertices iy ≠ poly.toPolygon.vertices (iy + 1) := poly.adj_vertices_distinct iy
+    have hne : poly.toPolygon.vertices iy ≠ poly.toPolygon.vertices (iy + 1)
+      := poly.adj_vertices_distinct iy
     have hty_eq_1 : ty = 1 := by
-      have heq : poly.toPolygon.edgePath iy ty = poly.toPolygon.edgePath iy 1 := hty_vertex.trans hedge_at_1.symm
+      have heq : poly.toPolygon.edgePath iy ty = poly.toPolygon.edgePath iy 1
+        := hty_vertex.trans hedge_at_1.symm
       simp only [Polygon.edgePath, AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add] at heq
-      have hdir : poly.toPolygon.vertices (iy + 1) - poly.toPolygon.vertices iy ≠ 0 := sub_ne_zero.mpr (Ne.symm hne)
+      have hdir : poly.toPolygon.vertices (iy + 1) - poly.toPolygon.vertices iy ≠ 0
+        := sub_ne_zero.mpr (Ne.symm hne)
       -- heq : ty • (v1 - v0) + v0 = 1 • (v1 - v0) + v0
       -- Subtract v0 from both sides
       have h2 : ty • (poly.toPolygon.vertices (iy + 1) - poly.toPolygon.vertices iy) =
@@ -747,13 +754,17 @@ lemma boundaryParam_injOn_Ico : InjOn poly.boundaryParam (Ico 0 1) := by
     have htxIcc : tx ∈ Icc (0 : ℝ) 1 := ⟨htx.1, le_of_lt htx.2⟩
     have htyIcc : ty ∈ Icc (0 : ℝ) 1 := ⟨hty.1, le_of_lt hty.2⟩
     have xin : poly.toPolygon.edgePath ix tx ∈ poly.toPolygon.edgeSet ix := by
-      simpa [poly.toPolygon.edgeSet_eq_image ix] using mem_image_of_mem (poly.toPolygon.edgePath ix) htxIcc
+      simpa [poly.toPolygon.edgeSet_eq_image_edgePath ix]
+      using mem_image_of_mem (poly.toPolygon.edgePath ix) htxIcc
     have yin0 : poly.toPolygon.edgePath iy ty ∈ poly.toPolygon.edgeSet iy := by
-      simpa [poly.toPolygon.edgeSet_eq_image iy] using mem_image_of_mem (poly.toPolygon.edgePath iy) htyIcc
-    have yin : poly.toPolygon.edgePath ix tx ∈ poly.toPolygon.edgeSet iy := by simpa [hxy] using yin0
+      simpa [poly.toPolygon.edgeSet_eq_image_edgePath iy]
+        using mem_image_of_mem (poly.toPolygon.edgePath iy) htyIcc
+    have yin : poly.toPolygon.edgePath ix tx ∈ poly.toPolygon.edgeSet iy
+      := by simpa [hxy] using yin0
     -- The point is in the intersection
-    have hp : poly.toPolygon.edgePath ix tx ∈ poly.toPolygon.edgeSet ix ∩ poly.toPolygon.edgeSet (ix + 1) := by
-      rw [← adjEdges']; exact ⟨xin, yin⟩
+    have hp : poly.toPolygon.edgePath ix tx
+      ∈ poly.toPolygon.edgeSet ix ∩ poly.toPolygon.edgeSet (ix + 1) := by
+        rw [← adjEdges']; exact ⟨xin, yin⟩
     -- By adjacent_edges_inter, this intersection is {vertices (ix + 1)}
     rw [poly.adjacent_edges_inter ix] at hp
     simp only [mem_singleton_iff] at hp
@@ -797,12 +808,12 @@ lemma boundaryParam_injOn_Ico : InjOn poly.boundaryParam (Ico 0 1) := by
     -- tx ∈ Icc 0 1
     have htxIcc : tx ∈ Icc (0 : ℝ) 1 := ⟨htx.1, le_of_lt htx.2⟩
   -- reduce goal to membership in the image, then use mem_image_of_mem
-    refine (poly.toPolygon.edgeSet_eq_image ix).symm ▸ ?_
+    refine (poly.toPolygon.edgeSet_eq_image_edgePath ix).symm ▸ ?_
     exact mem_image_of_mem (poly.toPolygon.edgePath ix) htxIcc
   have yin0 : poly.toPolygon.edgePath iy ty ∈ poly.toPolygon.edgeSet iy := by
     have htyIcc : ty ∈ Icc (0 : ℝ) 1 := ⟨hty.1, le_of_lt hty.2⟩
   -- reduce goal to membership in the image, then use mem_image_of_mem
-    refine (poly.toPolygon.edgeSet_eq_image iy).symm ▸ ?_
+    refine (poly.toPolygon.edgeSet_eq_image_edgePath iy).symm ▸ ?_
     exact mem_image_of_mem (poly.toPolygon.edgePath iy) htyIcc
   have yin : poly.toPolygon.edgePath ix tx ∈ poly.toPolygon.edgeSet iy := by
   -- rewrite using hxy
@@ -891,80 +902,80 @@ lemma circleMap_range : range poly.circleMap = poly.toPolygon.boundary := by
   · -- Backward: if p is in some edgeSet, it's in the range of circleMap
     intro h
     rcases h with ⟨i, hi⟩
-    rw[poly.toPolygon.edgeSet_eq_image i,mem_image] at hi
+    rw[poly.toPolygon.edgeSet_eq_image_edgePath i,mem_image] at hi
     rcases hi with ⟨t, htmem⟩
     let s : ℝ := (i.val + t) / n
     by_cases s1 : s = 1
-    have nit : n = (i : ℕ)  + t := by
-      have hn0 : ( (n : ℝ) ) ≠ 0 := by
-        exact_mod_cast (NeZero.ne n)
-      have hs : ((↑↑i + t) / (n : ℝ)) = (1 : ℝ) := by
-        simpa [s] using s1
-      have h : (↑↑i + t) = (1 : ℝ) * (n : ℝ) := by
-        exact (div_eq_iff hn0).1 hs
-      simpa [one_mul, add_comm, add_left_comm, add_assoc] using h.symm
-    have tle1 : t ≤ 1 := (Set.mem_Icc.mp htmem.left).right
-    have nlei1 : n ≤ (i : ℕ) + 1 := by
-      have hreal : (n : ℝ) ≤ (i : ℝ) + 1 := by
-        linarith [nit, tle1]
-      exact_mod_cast hreal
-    have : n ≥ (i : ℕ) + 1 := Nat.succ_le_of_lt i.isLt
-    have ni1 : n = (i : ℕ) + 1 := by exact Nat.le_antisymm nlei1 this
-    have t1 : t = 1 := by
-      have hthisR : (n : ℝ) = (i : ℝ) + 1 := by
-      -- cast `this` to ℝ
-        have := congrArg (fun m : ℕ => (m : ℝ)) ni1
-        -- simplify the cast of `(i : ℕ) + 1`
-        simpa [Nat.cast_add, Nat.cast_one] using this
-      have hit : (i : ℝ) + t = (i : ℝ) + 1 := by
-        -- rewrite `(n:ℝ)` using `nit` and `hthisR`
+    · have nit : n = (i : ℕ)  + t := by
+        have hn0 : ( (n : ℝ) ) ≠ 0 := by
+          exact_mod_cast (NeZero.ne n)
+        have hs : ((↑↑i + t) / (n : ℝ)) = (1 : ℝ) := by
+          simpa [s] using s1
+        have h : (↑↑i + t) = (1 : ℝ) * (n : ℝ) := by
+          exact (div_eq_iff hn0).1 hs
+        simpa [one_mul, add_comm, add_left_comm, add_assoc] using h.symm
+      have tle1 : t ≤ 1 := (Set.mem_Icc.mp htmem.left).right
+      have nlei1 : n ≤ (i : ℕ) + 1 := by
+        have hreal : (n : ℝ) ≤ (i : ℝ) + 1 := by
+          linarith [nit, tle1]
+        exact_mod_cast hreal
+      have : n ≥ (i : ℕ) + 1 := Nat.succ_le_of_lt i.isLt
+      have ni1 : n = (i : ℕ) + 1 := by exact Nat.le_antisymm nlei1 this
+      have t1 : t = 1 := by
+        have hthisR : (n : ℝ) = (i : ℝ) + 1 := by
+        -- cast `this` to ℝ
+          have := congrArg (fun m : ℕ => (m : ℝ)) ni1
+          -- simplify the cast of `(i : ℕ) + 1`
+          simpa [Nat.cast_add, Nat.cast_one] using this
+        have hit : (i : ℝ) + t = (i : ℝ) + 1 := by
+          -- rewrite `(n:ℝ)` using `nit` and `hthisR`
+          calc
+            (i : ℝ) + t = (n : ℝ) := by simpa using nit.symm
+            _ = (i : ℝ) + 1 := hthisR
+        exact add_left_cancel hit
+      have hp : p = poly.toPolygon.edgePath i 1 := by
         calc
-          (i : ℝ) + t = (n : ℝ) := by simpa using nit.symm
-          _ = (i : ℝ) + 1 := hthisR
-      exact add_left_cancel hit
-    have hp : p = poly.toPolygon.edgePath i 1 := by
-      calc
-        p = poly.toPolygon.edgePath i t := by simpa using htmem.2.symm
-        _ = poly.toPolygon.edgePath i 1 := by simp [t1]
-    unfold Polygon.edgePath at hp
-    simp only [AffineMap.lineMap_apply_one] at hp
-    have hn3 : (3 : ℕ) ≤ n := poly.n_ge_3
-    have h1lt : (1 : ℕ) < n := lt_of_lt_of_le (by decide : (1 : ℕ) < 3) hn3
-    have hmod : ((i : ℕ) + 1) % n = 0 := by
-      -- rewrite the denominator using ni1, so it's x % x
-      simp only [ni1, Nat.mod_self]
-    have hi_add_one : (i + 1 : Fin n) = 0 := by
-      apply Fin.ext
-      -- (i+1).val = (i.val + 1) % n
-      -- and 0.val = 0
-      simp only [Fin.val_add, Fin.coe_ofNat_eq_mod, Nat.add_mod_mod, hmod, Nat.zero_mod]
-    have hwrap : poly.toPolygon.vertices (i + 1) = poly.toPolygon.vertices 0 := by
-      simp only [hi_add_one]
-    rw[hp]
-    simp only [hwrap]
-    unfold boundaryParam
-    use (0 : AddCircle (1:ℝ))
-    have h0 : (0 : ℝ) ∈ Set.Ico (0:ℝ) (0 + (1:ℝ)) := by simp only [zero_add, mem_Ico,
-      le_refl, zero_lt_one, and_self]
-    let f : ℝ → EuclideanSpace ℝ (Fin 2) :=
-      fun t =>
-        if t = 1 then poly.toPolygon.vertices 0
-        else
-          poly.toPolygon.edgePath
-            ⟨⌊t * (n:ℝ)⌋.toNat % n, by
-              simpa using (by
-                exact Nat.mod_lt _ (Nat.pos_of_ne_zero (NeZero.ne n))
-                )⟩
-            (t * (n:ℝ) - (⌊t * (n:ℝ)⌋.toNat % n : ℕ))
-    have hlift : AddCircle.liftIco (1:ℝ) 0 f 0 = f 0 := by
-  -- `0` in AddCircle is the coercion of `⟨0,h0⟩`
-      simpa [f] using
-        (AddCircle.liftIco_coe_apply (p := (1:ℝ)) (a := (0:ℝ)) (f := f) (x := (0:ℝ)) h0)
-    rw [hlift]
-    simp only [zero_ne_one, ↓reduceIte, zero_mul, Int.floor_zero, Int.toNat_zero, Nat.zero_mod,
-      Fin.mk_zero', CharP.cast_eq_zero, sub_self, f]
-    simp only [Polygon.edgePath]
-    simp only [zero_add, AffineMap.lineMap_apply_zero]
+          p = poly.toPolygon.edgePath i t := by simpa using htmem.2.symm
+          _ = poly.toPolygon.edgePath i 1 := by simp [t1]
+      unfold Polygon.edgePath at hp
+      simp only [AffineMap.lineMap_apply_one] at hp
+      have hn3 : (3 : ℕ) ≤ n := poly.n_ge_3
+      have h1lt : (1 : ℕ) < n := lt_of_lt_of_le (by decide : (1 : ℕ) < 3) hn3
+      have hmod : ((i : ℕ) + 1) % n = 0 := by
+        -- rewrite the denominator using ni1, so it's x % x
+        simp only [ni1, Nat.mod_self]
+      have hi_add_one : (i + 1 : Fin n) = 0 := by
+        apply Fin.ext
+        -- (i+1).val = (i.val + 1) % n
+        -- and 0.val = 0
+        simp only [Fin.val_add, Fin.coe_ofNat_eq_mod, Nat.add_mod_mod, hmod, Nat.zero_mod]
+      have hwrap : poly.toPolygon.vertices (i + 1) = poly.toPolygon.vertices 0 := by
+        simp only [hi_add_one]
+      rw[hp]
+      simp only [hwrap]
+      unfold boundaryParam
+      use (0 : AddCircle (1:ℝ))
+      have h0 : (0 : ℝ) ∈ Set.Ico (0:ℝ) (0 + (1:ℝ)) := by simp only [zero_add, mem_Ico,
+        le_refl, zero_lt_one, and_self]
+      let f : ℝ → EuclideanSpace ℝ (Fin 2) :=
+        fun t =>
+          if t = 1 then poly.toPolygon.vertices 0
+          else
+            poly.toPolygon.edgePath
+              ⟨⌊t * (n:ℝ)⌋.toNat % n, by
+                simpa using (by
+                  exact Nat.mod_lt _ (Nat.pos_of_ne_zero (NeZero.ne n))
+                  )⟩
+              (t * (n:ℝ) - (⌊t * (n:ℝ)⌋.toNat % n : ℕ))
+      have hlift : AddCircle.liftIco (1:ℝ) 0 f 0 = f 0 := by
+    -- `0` in AddCircle is the coercion of `⟨0,h0⟩`
+        simpa [f] using
+          (AddCircle.liftIco_coe_apply (p := (1:ℝ)) (a := (0:ℝ)) (f := f) (x := (0:ℝ)) h0)
+      rw [hlift]
+      simp only [zero_ne_one, ↓reduceIte, zero_mul, Int.floor_zero, Int.toNat_zero, Nat.zero_mod,
+        Fin.mk_zero', CharP.cast_eq_zero, sub_self, f]
+      simp only [Polygon.edgePath]
+      simp only [zero_add, AffineMap.lineMap_apply_zero]
     use s
     simp only [AddCircle.liftIco, Function.comp_apply, Set.restrict_apply]
     have hs_nonneg : 0 ≤ s := by
@@ -1007,15 +1018,15 @@ lemma circleMap_range : range poly.circleMap = poly.toPolygon.boundary := by
           · exact_mod_cast hhi
         simp only [floorEq, Int.toNat_natCast, Nat.mod_eq_of_lt i.isLt]
     rcases this with onSegment | atEdge
-    simp only [onSegment]
-    simp only [Fin.eta]
-    have : (s * ↑n - ↑↑i) = t := by
-      simp only [s]
-      have hn_ne : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne n)
-      field_simp
-      ring
-    rw[this]
-    exact htmem.right
+    · simp only [onSegment]
+      simp only [Fin.eta]
+      have : (s * ↑n - ↑↑i) = t := by
+        simp only [s]
+        have hn_ne : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne n)
+        field_simp
+        ring
+      rw[this]
+      exact htmem.right
     have : ⌊s * ↑n⌋.toNat % n = ↑i + 1 := by
       rw [atEdge]
       have hn_pos : (0 : ℝ) < n := Nat.cast_pos.mpr (NeZero.pos n)
