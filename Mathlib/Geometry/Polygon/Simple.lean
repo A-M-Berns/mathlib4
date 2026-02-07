@@ -36,7 +36,7 @@ theorem nonadjacent_disjoint {i j : Fin n} (h : poly.IsSimple R)
     Disjoint (poly.edgeSet R i) (poly.edgeSet R j) :=
   h.left i j hij hi hj
 
-theorem adjacent_inter (i : Fin n) (h : poly.IsSimple R) :
+theorem adjacent_inter (h : poly.IsSimple R) (i : Fin n) :
     poly.edgeSet R i ∩ poly.edgeSet R (i + 1) = {poly (i + 1)} :=
   h.right i
 
