@@ -97,7 +97,18 @@ theorem range_eq_boundary : Set.range (poly.boundaryMap (R := R)) = poly.boundar
         Nat.mod_eq_of_lt (i+1 : Fin n).isLt, t, edgePath, Fin.eta,
         Int.fract_natCast, lineMap_apply_zero]
 
-theorem injective [IsDomain R] [Module.IsTorsionFree R V]
+end boundaryMap
+
+namespace IsSimple
+
+variable {R V P : Type*}
+variable [Ring R] [LinearOrder R] [IsStrictOrderedRing R] [FloorRing R]
+variable [Archimedean R]
+variable [AddCommGroup V] [Module R V] [AddTorsor V P]
+variable {n : ℕ} [NeZero n]
+variable {poly : Polygon P n}
+
+theorem boundaryMap_injective [IsDomain R] [Module.IsTorsionFree R V]
     (h : poly.IsSimple R) (nde : poly.HasNondegenerateEdges) :
     Function.Injective (poly.boundaryMap (R := R)) := by
   haveI : Fact ((0 : R) < (n : R)) := ⟨by exact_mod_cast Nat.pos_of_neZero n⟩
@@ -171,6 +182,6 @@ theorem injective [IsDomain R] [Module.IsTorsionFree R V]
       · have hdisj := h.nonadjacent_disjoint hindex hadj' hadj
         exact (Set.disjoint_iff.mp hdisj hp_in_both).elim
 
-end boundaryMap
+end IsSimple
 
 end Polygon
